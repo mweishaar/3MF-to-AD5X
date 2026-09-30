@@ -174,6 +174,17 @@ def system_is_dark():
         if IS_MAC:
             r = subprocess.run(["defaults", "read", "-g", "AppleInterfaceStyle"], capture_output=True, text=True)
             return "Dark" in r.stdout
+        else:                                  # Linux: GTK colour scheme (GNOME-first, works on most DEs)
+            try:
+                r = subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", "color-scheme"],
+                                   capture_output=True, text=True, timeout=3)
+                if r.returncode == 0 and "prefer-dark" in r.stdout.lower():
+                    return True
+                r = subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", "gtk-theme"],
+                                   capture_output=True, text=True, timeout=3)
+                return r.returncode == 0 and "-dark" in r.stdout.lower()
+            except Exception:
+                pass
     except Exception:
         pass
     return False
